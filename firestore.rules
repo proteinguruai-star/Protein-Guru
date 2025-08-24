@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - users can only read/write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId
+        && isValidUserData(request.resource.data);
+      allow create: if request.auth != null && request.auth.uid == userId
+        && isValidUserData(request.resource.data);
+    }
+    
+    // Function to validate user data structure
+    function isValidUserData(data) {
+      return data.keys().hasAll(['phone', 'name', 'email', 'age', 'sex', 'weight', 'lifestyle', 'diet'])
+        && data.phone is string
+        && data.name is string
+        && data.email is string
+        && data.age is number && data.age >= 12 && data.age <= 90
+        && data.sex in ['male', 'female', 'other']
+        && data.weight is number && data.weight >= 30 && data.weight <= 200
+        && data.lifestyle in ['gym', 'non-gym']
+        && data.diet in ['veg', 'egg', 'non-veg'];
+    }
+    
+    // Admin collection (for future admin features)
+    match /admin/{document=**} {
+      allow read, write: if request.auth != null && 
+        request.auth.token.email == 'your-admin@gmail.com'; // Replace with your admin email
+    }
+  }
+}
