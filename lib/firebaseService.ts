@@ -1,5 +1,7 @@
 import { 
   signInWithPhoneNumber, 
+  signInWithPopup,
+  GoogleAuthProvider,
   ConfirmationResult, 
   User,
   RecaptchaVerifier
@@ -73,7 +75,7 @@ class FirebaseService {
 
       // Ensure recaptcha is ready
       if (!this.recaptchaVerifier) {
-        this.initRecaptcha();
+        this.initRecaptcha('recaptcha-container');
         // Wait for initialization
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
@@ -89,12 +91,22 @@ class FirebaseService {
     } catch (error: any) {
       console.error('Send OTP error:', error);
       
+      // Handle specific error codes
+      if (error.code === 'auth/invalid-app-credential') {
+        toast.error('Firebase configuration error. Please check project setup.');
+        console.error('❌ Firebase Error: Phone authentication not properly configured. Please check:');
+        console.error('1. Phone Authentication is enabled in Firebase Console');
+        console.error('2. Test phone numbers are configured (if using test numbers)');
+        console.error('3. Firebase project billing is set up');
+        return false;
+      }
+      
       // Clear and retry once on captcha failure
       if (error.code === 'auth/captcha-check-failed') {
         try {
           this.recaptchaVerifier?.clear();
           this.recaptchaVerifier = null;
-          this.initRecaptcha();
+          this.initRecaptcha('recaptcha-container');
           await new Promise(resolve => setTimeout(resolve, 1000));
           
           this.confirmationResult = await signInWithPhoneNumber(
@@ -135,9 +147,39 @@ class FirebaseService {
     }
   }
 
+  // Google Sign In
+  async signInWithGoogle(): Promise<User | null> {
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.addScope('email');
+      provider.addScope('profile');
+      
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      toast.success(`Welcome ${user.displayName || user.email}!`);
+      return user;
+    } catch (error: any) {
+      console.error('Google sign in error:', error);
+      
+      if (error.code === 'auth/popup-closed-by-user') {
+        toast.error('Sign in cancelled');
+      } else if (error.code === 'auth/popup-blocked') {
+        toast.error('Popup blocked. Please allow popups and try again.');
+      } else {
+        toast.error('Sign in failed. Please try again.');
+      }
+      
+      return null;
+    }
+  }
+
   // Save user data
   async saveUserData(userData: UserData, userId: string): Promise<void> {
     try {
+      console.log('Saving user data:', { userId, userData });
+      console.log('Current auth user:', auth.currentUser?.uid);
+      
       await setDoc(doc(db, 'users', userId), {
         ...userData,
         uid: userId,
