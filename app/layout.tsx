@@ -2,9 +2,25 @@ import './globals.css';
 import SmoothScroll from './SmoothScroll';
 import { Toaster } from 'react-hot-toast';
 
+// ✅ Add metadata with favicon + logo
+export const metadata = {
+  title: "Protein Guru.ai",
+  description: "India’s protein co-pilot",
+  icons: {
+    icon: "/favicon.ico",        // browser tab icon
+    shortcut: "/favicon.ico",
+    apple: "/logo.png",          // iOS/Apple devices
+  },
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        {/* fallback link tags in case metadata doesn't catch */}
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+      </head>
       <body>
         <SmoothScroll />
         {children}
