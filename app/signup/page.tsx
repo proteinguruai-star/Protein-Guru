@@ -307,13 +307,37 @@ export default function SignupWizard() {
         )}
 
         {/* AGE (METER) */}
-        {step === 'age' && (
-          <motion.section key="age" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-            <Shell icon={<BadgeHelp size={18} />} title="How old are you?">
-              <Meter min={12} max={90} step={1} value={age} onChange={setAge} unit="yrs" />
-            </Shell>
-          </motion.section>
-        )}
+        {/* Age & Weight (number inputs) */}
+<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+  <div className="flex flex-col">
+    <label className="text-sm font-medium">Age (years)</label>
+    <input
+      type="number"
+      inputMode="numeric"
+      placeholder="e.g., 25"
+      min={10}
+      max={100}
+      step={1}
+      {...register("age", { valueAsNumber: true, min: 10, max: 100 })}
+      className="w-full rounded-xl border px-3 py-2 outline-none focus:ring"
+    />
+  </div>
+
+  <div className="flex flex-col">
+    <label className="text-sm font-medium">Weight (kg)</label>
+    <input
+      type="number"
+      inputMode="decimal"
+      placeholder="e.g., 62.5"
+      min={30}
+      max={200}
+      step={0.1}
+      {...register("weight", { valueAsNumber: true, min: 30, max: 200 })}
+      className="w-full rounded-xl border px-3 py-2 outline-none focus:ring"
+    />
+  </div>
+</div>
+}
 
         {/* SEX */}
         {step === 'sex' && (
